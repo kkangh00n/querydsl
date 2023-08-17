@@ -46,7 +46,11 @@ tasks.named('test') {
 }
 
 //querydsl 추가 시작
-def querydslDir = "$buildDir/generated/querydsl"
+
+//querydsl 사용 경로
+def querydslDir = "$buildDir/generated/querydsl/generated"
+
+//JPA 사용 여부와 사용 경로 설정
 querydsl {
 	jpa = true
 	querydslSourcesDir = querydslDir
