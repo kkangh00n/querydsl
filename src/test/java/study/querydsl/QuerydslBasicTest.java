@@ -1,5 +1,6 @@
 package study.querydsl;
 
+import com.querydsl.core.QueryResults;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -11,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.entity.Team;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
+
+import java.util.List;
 
 import static study.querydsl.entity.QMember.*;
 
@@ -103,5 +106,36 @@ public class QuerydslBasicTest {
      * ...
      */
 
+    @Test
+    public void resultFetch(){
+        //전체 리스트
+        List<Member> memberList = queryFactory
+                .select(member)
+                .fetch();
+
+        //단일 조회
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .fetchOne();
+
+        //처음 한 건 조회 -> limit 1
+        Member firstMember = queryFactory
+                .selectFrom(member)
+                .fetchFirst();
+
+        //페이징 사용
+        QueryResults<Member> pageList = queryFactory
+                .selectFrom(member)
+                .fetchResults();
+        //페이징 결과에서 데이터 추출
+        List<Member> results = pageList.getResults();
+        //페이징 결과의 전체 개수
+        long totalCount1 = pageList.getTotal();
+
+        //count 쿼리
+        long totalCount2 = queryFactory
+                .selectFrom(member)
+                .fetchCount();
+    }
 
 }
