@@ -175,4 +175,34 @@ public class QuerydslBasicTest {
          */
     }
 
+    //조회 건수 제한
+    @Test
+    public void paging1(){
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .orderBy(member.username.desc())
+                .offset(1) //0부터 1까지
+                .limit(2) //최대 2건 조회
+                .fetch();
+
+        assertThat(result.size()).isEqualTo(2);
+    }
+
+    //전체 조회 수가 필요하다면
+    @Test
+    public void paging2(){
+        //count 쿼리가 실행!!
+        QueryResults<Member> queryResults = queryFactory
+                .selectFrom(member)
+                .orderBy(member.username.desc())
+                .offset(1)
+                .limit(2)
+                .fetchResults();
+
+        assertThat(queryResults.getTotal()).isEqualTo(4);   //전체 데이터 수
+        assertThat(queryResults.getLimit()).isEqualTo(2);   //limit 2인가
+        assertThat(queryResults.getOffset()).isEqualTo(1);  //offset 1인가
+        assertThat(queryResults.getResults().size()).isEqualTo(2);  //Content
+    }
+
 }
