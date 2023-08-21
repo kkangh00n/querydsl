@@ -2,6 +2,7 @@ package study.querydsl;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
@@ -523,6 +524,39 @@ public class QuerydslBasicTest {
 
 
     //================================ 중급 문법 =========================================
+
+    //필드 별칭 설정
+    @Test
+    public void as(){
+        List<String> name = queryFactory
+                .select(member.username.as("name"))
+                .from(member)
+                .fetch();
+
+        for (String s : name) {
+            System.out.println("s = " + s);
+        }
+    }
+
+    //필드 혹은 서브 쿼리 별칭 설정
+    @Test
+    public void asSubQuery(){
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> result = queryFactory
+                .select(ExpressionUtils.as(
+                        JPAExpressions
+                                .select(member)
+                                .from(memberSub), "age"
+                ))
+                .from(member)
+                .fetch();
+
+        for (Member member : result) {
+            System.out.println("member1 = " + member);
+        }
+    }
+
     @Test
     public void simpleProjection(){
         List<String> result = queryFactory
