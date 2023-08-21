@@ -291,6 +291,40 @@ public class QuerydslBasicTest {
                 .containsExactly("teamA", "teamB");
     }
 
+    /**
+     * 예) 회원과 팀을 조인하면서, 팀 이름이 teamA인 팀만 조인, 회원은 모두 조회
+     * JPQL: SELECT m, t FROM Member m LEFT JOIN m.team t on t.name = 'teamA'
+     * SQL: SELECT m.*, t.* FROM Member m LEFT JOIN Team t ON m.TEAM_ID=t.id and
+     t.name='teamA'
+     */
+    @Test
+    public void join_on_filtering(){
+        List<Tuple> result = queryFactory
+                .select(member, team)
+                .from(member)
+                .join(member.team, team).on(team.name.eq("teamA"))
+                .fetch();
+
+        for (Tuple tuple : result) {
+            System.out.println("tuple = " + tuple);
+        }
+    }
+
+    @Test
+    public void join_on_no_relation(){
+        em.persist(new Member("teamA"));
+        em.persist(new Member("teamB"));
+
+        List<Tuple> result = queryFactory
+                .select(member, team)
+                .from(member)
+                .leftJoin(team).on(member.username.eq(team.name))
+                .fetch();
+
+        for (Tuple tuple : result) {
+            System.out.println("tuple = " + tuple);
+        }
+    }
 
 
 }
