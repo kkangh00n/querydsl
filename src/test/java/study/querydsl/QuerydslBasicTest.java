@@ -1,7 +1,12 @@
 package study.querydsl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
@@ -11,11 +16,12 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.PersistenceUnit;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import study.querydsl.dto.MemberDto;
+import study.querydsl.dto.QMemberDto;
 import study.querydsl.entity.Team;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
@@ -515,6 +521,243 @@ public class QuerydslBasicTest {
         for (String s : result) {
             System.out.println("s = " + s);
         }
+    }
+
+
+
+
+    //================================ 중급 문법 =========================================
+
+    //필드 별칭 설정
+    @Test
+    public void as(){
+        List<String> name = queryFactory
+                .select(member.username.as("name"))
+                .from(member)
+                .fetch();
+
+        for (String s : name) {
+            System.out.println("s = " + s);
+        }
+    }
+
+    //필드 혹은 서브 쿼리 별칭 설정
+    @Test
+    public void asSubQuery(){
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> result = queryFactory
+                .select(ExpressionUtils.as(
+                        JPAExpressions
+                                .select(member)
+                                .from(memberSub), "age"
+                ))
+                .from(member)
+                .fetch();
+
+        for (Member member : result) {
+            System.out.println("member1 = " + member);
+        }
+    }
+
+    @Test
+    public void simpleProjection(){
+        List<String> result = queryFactory
+                .select(member.username)
+                .from(member)
+                .fetch();
+
+        for (String s : result) {
+            System.out.println("s = " + s);
+        }
+    }
+
+    @Test
+    public void tupleProjection(){
+        List<Tuple> result = queryFactory
+                .select(member.username, member.age)
+                .from(member)
+                .fetch();
+
+        for (Tuple tuple : result) {
+            String username = tuple.get(member.username);
+            Integer age = tuple.get(member.age);
+            System.out.println("username = " + username);
+            System.out.println("age = " + age);
+        }
+    }
+
+    //프로퍼티 접근
+    @Test
+    public void findDtoBySetter(){
+        List<MemberDto> result = queryFactory
+                .select(Projections.bean(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto.getUsername());
+            System.out.println("memberDto = " + memberDto.getAge());
+        }
+    }
+
+    //필드 직접 접근
+    @Test
+    public void findDtoByField(){
+        List<MemberDto> result = queryFactory
+                .select(Projections.fields(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto.getUsername());
+            System.out.println("memberDto = " + memberDto.getAge());
+        }
+    }
+
+    //생성자 접근
+    @Test
+    public void findDtoByConstructor(){
+        List<MemberDto> result = queryFactory
+                .select(Projections.constructor(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto.getUsername());
+            System.out.println("memberDto = " + memberDto.getAge());
+        }
+    }
+
+    @Test
+    public void queryProjection(){
+        List<MemberDto> result = queryFactory
+                .select(new QMemberDto(member.username, member.age))
+                .from(member)
+                .fetch();
+
+        for (MemberDto memberDto : result) {
+            System.out.println("username = " + memberDto.getUsername());
+            System.out.println("age = " + memberDto.getAge());
+        }
+    }
+
+    @Test
+    public void distinct(){
+        List<String> result = queryFactory
+                .select(member.username).distinct()
+                .from(member)
+                .fetch();
+    }
+
+
+    @Test
+    public void 동적쿼리_booleanBuilder(){
+        String usernameParam = "member1";
+        Integer ageParam = 10;
+
+        List<Member> result = searchMember1(usernameParam, ageParam);
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+    private List<Member> searchMember1(String usernameCond, Integer ageCond) {
+
+        BooleanBuilder builder = new BooleanBuilder();
+        if(usernameCond != null){
+            builder.and(member.username.eq(usernameCond));
+        }
+        if(ageCond!=null){
+            builder.and(member.age.eq(ageCond));
+        }
+
+        return queryFactory
+                .selectFrom(member)
+                .where(builder)
+                .fetch();
+
+    }
+
+    @Test
+    public void 동적쿼리_whereParam(){
+        String usernameParam = "member1";
+        Integer ageParam = 10;
+
+        List<Member> result = searchMember2(usernameParam, ageParam);
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+    private List<Member> searchMember2(String usernameCond, Integer ageCond) {
+        return queryFactory
+                .selectFrom(member)
+                .where(usernameEq(usernameCond), ageEq(ageCond))
+                .fetch();
+    }
+
+    private BooleanExpression usernameEq(String usernameCond) {
+        return usernameCond!=null?member.username.eq(usernameCond):null;
+    }
+
+    private BooleanExpression ageEq(Integer ageCond) {
+        return ageCond!=null?member.age.eq(ageCond):null;
+    }
+
+    //벌크 수정
+    @Test
+    public void bulkUpdate(){
+        long count = queryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(20))
+                .execute();
+    }
+
+    //벌크 수정 2
+    @Test
+    public void bulkUpdate2(){
+        long count = queryFactory
+                .update(member)
+//                .set(member.age, member.age.add(1))
+                .set(member.age, member.age.multiply(2))
+                .execute();
+    }
+
+    //벌크 삭제
+    @Test
+    public void bulkDelete(){
+        long count = queryFactory
+                .delete(member)
+                .where(member.age.gt(18))
+                .execute();
+
+        assertThat(count).isEqualTo(3);
+    }
+
+    //username의 member를 모두 M으로 변경하는 replace 함수 사용
+    @Test
+    public void sqlFunction(){
+        String result = queryFactory
+                .select(Expressions.stringTemplate(
+                        "function('replace, {0}, {1}, {2})",
+                        member.username, "member", "M"))
+                .from(member)
+                .fetchFirst();
+    }
+
+    //소문자로 변경
+    @Test
+    public void sqlFunction2(){
+        String result = queryFactory
+                .select(member.username)
+                .from(member)
+                .where(member.username.eq(Expressions.stringTemplate("function('lower', {0})",
+                        member.username)))
+                .fetchFirst();
     }
 
 }
