@@ -70,7 +70,7 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom{
     }
 
     @Override
-    public Page<MemberTeamDto> searchPageComplex(MemberSearchCondition condition, Pageable pageable) {
+    public Page<MemberTeamDto> searchPageComplex(MemberSearchCondition condition, Pageable pageable) throws NullPointerException {
 
         //데이터 조회 쿼리 (페이징 적용)
         List<MemberTeamDto> content = queryFactory
@@ -100,8 +100,6 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom{
                         teamnameEq(condition.getTeamName()),
                         ageGoe(condition.getAgeGoe()),
                         ageLoe(condition.getAgeLoe()))
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
                 .fetchOne();
 
         return new PageImpl<>(content, pageable, total);
