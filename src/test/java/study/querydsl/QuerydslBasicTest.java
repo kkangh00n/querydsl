@@ -738,4 +738,25 @@ public class QuerydslBasicTest {
         assertThat(count).isEqualTo(3);
     }
 
+    //username의 member를 모두 M으로 변경하는 replace 함수 사용
+    @Test
+    public void sqlFunction(){
+        String result = queryFactory
+                .select(Expressions.stringTemplate(
+                        "function('replace, {0}, {1}, {2})",
+                        member.username, "member", "M"))
+                .from(member)
+                .fetchFirst();
+    }
+
+    @Test
+    public void sqlFunction2(){
+        String result = queryFactory
+                .select(member.username)
+                .from(member)
+                .where(member.username.eq(Expressions.stringTemplate("function('lower', {0})",
+                        member.username)))
+                .fetchFirst();
+    }
+
 }
