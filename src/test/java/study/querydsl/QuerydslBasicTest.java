@@ -707,4 +707,35 @@ public class QuerydslBasicTest {
         return ageCond!=null?member.age.eq(ageCond):null;
     }
 
+    //벌크 수정
+    @Test
+    public void bulkUpdate(){
+        long count = queryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(20))
+                .execute();
+    }
+
+    //벌크 수정 2
+    @Test
+    public void bulkUpdate2(){
+        long count = queryFactory
+                .update(member)
+//                .set(member.age, member.age.add(1))
+                .set(member.age, member.age.multiply(2))
+                .execute();
+    }
+
+    //벌크 삭제
+    @Test
+    public void bulkDelete(){
+        long count = queryFactory
+                .delete(member)
+                .where(member.age.gt(18))
+                .execute();
+
+        assertThat(count).isEqualTo(3);
+    }
+
 }
