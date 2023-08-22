@@ -749,6 +749,7 @@ public class QuerydslBasicTest {
                 .fetchFirst();
     }
 
+    //소문자로 변경
     @Test
     public void sqlFunction2(){
         String result = queryFactory
