@@ -645,4 +645,12 @@ public class QuerydslBasicTest {
         }
     }
 
+    @Test
+    public void distinct(){
+        List<String> result = queryFactory
+                .select(member.username).distinct()
+                .from(member)
+                .fetch();
+    }
+
 }
